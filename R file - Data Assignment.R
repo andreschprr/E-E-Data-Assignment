@@ -4,22 +4,30 @@
 # Date: November/2019
 ####################################
 
+#Load libraries
 library(ggplot2)
 library(dplyr)
 library(car)
 library(fastDummies)
+library(repmis)
 
-main_folder <- "~/Desktop/Data Assignment"
+
+#Loading data and setting wd
+main_folder <- "~/Desktop"
 setwd(main_folder)
-China_data <- "~/Desktop/Data Assignment/Question1.RData"
-part1data <- "~/Desktop/Data Assignment/part1.RData"
-part2data <- "~/Desktop/Data Assignment/part2.RData"
+
+China_data <-"https://github.com/andreschprr/E-E-Data-Assignment/blob/master/Question1.Rdata?raw=true"
+part1data <- "https://github.com/andreschprr/E-E-Data-Assignment/blob/master/part1.Rdata?raw=true"
+part2data <- "https://github.com/andreschprr/E-E-Data-Assignment/blob/master/part2.Rdata?raw=true"
+
+source_data(China_data)
+source_data(part1data)
+source_data(part2data)
+
 
 ############
 #Part 1
 ############
-
-load(China_data) 
 
 APIdata$Date <- as.Date(APIdata$Date, "%m/%d/%Y")
 
@@ -33,8 +41,6 @@ c + geom_histogram(mapping = NULL, data = NULL, stat = "bin",
 ############
 #Part 2.1
 ############
-
-load(part1data)
 
 #####################################################################################
 
@@ -135,8 +141,6 @@ print(plot1_5 + labs( title= "Average PM25 in Delhi (Nov 2015 - Apr 2016)", y="A
 ############
 #Part 2.2
 ############
-
-load(part2data)
 
 #####################################################################################
 
