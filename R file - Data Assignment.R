@@ -13,6 +13,7 @@ library(repmis)
 
 
 #Loading data and setting wd
+
 main_folder <- "~/Desktop"
 setwd(main_folder)
 
@@ -29,14 +30,14 @@ source_data(part2data)
 #Part 1
 ############
 
-APIdata$Date <- as.Date(APIdata$Date, "%m/%d/%Y")
+#Histogram
 
+APIdata$Date <- as.Date(APIdata$Date, "%m/%d/%Y")
 c <- ggplot(APIdata, aes(API)) + geom_histogram(mapping = NULL, data = NULL, stat = "bin",
                  position = "stack", colour = "white", binwidth = NULL, bins = 40,
                  na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) +
   geom_vline(xintercept = 100,col="red")
 print(c)
-ggsave("c.png")
 
 
 ############
@@ -46,6 +47,9 @@ ggsave("c.png")
 #####################################################################################
 
 #2.1.1
+
+#Summary table. Subsetting only the three variables that we care about
+
 part1_1data <- cbind(part1$PM10, part1$PM25, part1$NO2)
 colnames(part1_1data) <- c("PM10", "PM25", "NO2")
 summary(part1_1data)
@@ -53,6 +57,8 @@ summary(part1_1data)
 #####################################################################################
 
 #2.1.2
+
+#Grouping the data by date, getting the average mean per day and plotting a scatter plot
 
 part1_2data <- part1 %>% group_by(date)
 
@@ -68,6 +74,9 @@ print(plot1_2 + labs( title= "Average PM25 per Day (Nov 2015 - Apr 2016)", y="Av
 #####################################################################################
 
 #2.1.3
+
+#Grouping the data by hour, then getting the average mean by hour, plotting a line
+
 part1_3data <- part1 %>% group_by(Hour)
 
 data_plot1_3 <- part1_3data %>% summarise(
@@ -85,6 +94,8 @@ print(plot1_3 + labs( title= "Average PM25 per Hour (Nov 2015 - Apr 2016)", y="A
 #####################################################################################
 
 #2.1.4
+
+#Removing non Delhi data. Grouping by station, getting average PM25 by stations. Plotting columns
 
 part1_Delhi <- subset(part1, Delhi == 1)
 part1_4data <- part1_Delhi %>% group_by(station_name)
@@ -106,7 +117,11 @@ print(plot1_4 + labs( title= "Average PM25 in Delhi stations (Nov 2015 - Apr 201
 
 #2.1.5
 
+#Using the data from the previous question but ordered from more PM25 to less. 
+
 data1_5 <- data_plot1_4[order(data_plot1_4$PM25, decreasing = TRUE),]
+
+#Generate 7 vectors. Each has between 1 and 7 PM25 measures. 1 being the case where only one station is active
 
 d1_5 <- data1_5[1:1,2]
 d2_5 <- data1_5[1:2,2]
@@ -115,6 +130,8 @@ d4_5 <- data1_5[1:4,2]
 d5_5 <- data1_5[1:5,2]
 d6_5 <- data1_5[1:6,2]
 d7_5 <- data1_5[1:7,2]
+
+#Get the mean of the PM25 measures in each vector, then unite them under a single dataframe
 
 plot_data1_5 <- cbind(as.numeric(colMeans(d1_5)), 
 as.numeric(colMeans(d2_5)), 
@@ -126,11 +143,12 @@ as.numeric(colMeans(d7_5)))
 
 plot_data1_5_new <- cbind.data.frame(plot_data1_5)
 plot_data1_5_new_t <- t(plot_data1_5_new)
+
+#Add new columnd data with x-axis values (1 to 7), add label to the columns and plot with a line
 new_col_data <- 1:7
 new_col <- data_frame(new_col_data)
 data_to_plot_15 <- cbind(new_col, plot_data1_5_new_t)
 names(data_to_plot_15) <- c("number", "PM25")
-
 
 plot1_5 <- ggplot(aes(x = number, y = PM25), data = data_to_plot_15) + geom_line() + geom_point()
 print(plot1_5 + labs( title= "Average PM25 in Delhi (Nov 2015 - Apr 2016)", y="Average PM25", x = "Number of stations considered"))
@@ -147,6 +165,8 @@ print(plot1_5 + labs( title= "Average PM25 in Delhi (Nov 2015 - Apr 2016)", y="A
 
 #2.2.1
 
+#Group data by date and by Delhi vs no Delhi, get mean PM25, plot
+
 part2_1data <- part2 %>% group_by(date, Delhi)
 
 
@@ -154,22 +174,30 @@ data_plot2_1 <- part2_1data %>% summarise(
   PM25 = mean(PM25)
 )
 
+#Use only data from December 1st to Jan 15th
+
 data_plot2_11 <- subset(data_plot2_1, date > "2015-11-30" & date < "2016-01-16")
 
 ggplot(data=data_plot2_11, aes(x=date, y=PM25, group=Delhi, colour = Delhi))+ 
   geom_line()+
   geom_vline(xintercept = as.POSIXct("2016-01-01"), col = "gold2", linetype = "dashed")
 
-#Initially the levels of PM25 went down in the first couple of dats both in Delhi and elsewhere. However the next few days we can see the highest numbers for the period. Then we have an extreme downward trend and a rebound. It is difficult to get a definitive conclusion about the impact of the policy since there is so much variation between days.
+#Initially the levels of PM25 went down in the first couple of days both in Delhi and elsewhere. However the next few days we can see the highest numbers for the period. Then we have an extreme downward trend and a rebound. It is difficult to get a definitive conclusion about the impact of the policy since there is so much variation between days.
 
 #####################################################################################
 
 #2.2.2
 
+#Use data from previous question. Get mean PM25 
+
 data_2_2 <- data_plot2_1 %>% summarise(
   PM25 = mean(PM25)
 )
-  
+
+#Create two dataframes. One with data from Delhi, the other with data from outside Delhi
+#merge them by date so the PM25 measures won't merge. This will create the variables PM25.x and PM25.y
+#Create new variable from the substraction of PM25.x - PM25.y and plot it
+
 data_2_2_Delhi <- subset(data_plot2_1, Delhi == 1)
 data_2_2_NoDelhi <- subset(data_plot2_1, Delhi == 0)
 data_2_2_merged <- merge(x = data_2_2_Delhi, y = data_2_2_NoDelhi, by = "date")
@@ -182,15 +210,23 @@ print(plot2_2 + labs( title= "Difference in daily PM25 between Delhi and outside
 
 #2.2.3
 
+#Use only Delhi data
+
 part2Delhi <- subset(part2, Delhi == 1)
+
+#Divide df in 3 parts. Before 2016, Between Jan 1st and Jan 15th, After Jan 15th
 
 part2Delhi_bp <- subset(part2Delhi, date < "2016-01-01")
 part2Delhi_p <- subset(part2Delhi, date > "2015-12-31" & date < "2016-01-16")
 part2Delhi_ap <- subset(part2Delhi, date > "2016-01-15")
 
+#Create new dummy variable on whether the policy was in place.
+
 part2Delhi_bp$Policy <- 0
 part2Delhi_p$Policy <- 1
 part2Delhi_ap$Policy <- 0
+
+#Reunite the three dataframes and do a linear regression using the new Policy variable
 
 part2_3 <- rbind(part2Delhi_bp, part2Delhi_p, part2Delhi_ap)
 
@@ -205,6 +241,8 @@ summary(reg2_3)
 
 #2.2.4
 
+#Using the data from the previous question, run another regression
+
 reg2_4 <- lm(PM25 ~ station_id + Policy*time, data = part2_3)
 summary(reg2_4)
 
@@ -213,6 +251,8 @@ summary(reg2_4)
 #####################################################################################
 
 #2.2.5
+
+#Same process of creating dummy if the policy was in place but this time for data inside and outside Delhi
 
 part2_bp <- subset(part2, date < "2016-01-01")
 part2_p <- subset(part2, date > "2015-12-31" & date < "2016-01-16")
@@ -224,6 +264,7 @@ part2_ap$Policy <- 0
 
 part2_5 <- rbind(part2_bp, part2_p, part2_ap)
 
+#Use data to run a regression
 
 reg2_5 <- lm(PM25 ~ time + Policy*Delhi, data = part2_5)
 summary(reg2_5)
@@ -234,6 +275,9 @@ summary(reg2_5)
 
 #2.2.6
 
+#Same process of creating dummy if the policy was in place but for data from part 1
+
+
 part1_bp <- subset(part1, date < "2016-01-01")
 part1_p <- subset(part1, date > "2015-12-31" & date < "2016-01-16")
 part1_ap <- subset(part1, date > "2016-01-15")
@@ -243,6 +287,8 @@ part1_p$Policy <- 1
 part1_ap$Policy <- 0
 
 part2_6 <- rbind(part1_bp, part1_p, part1_ap)
+
+#Similar process of creating dummy if the policy was in place but this time also considering the hour
 
 
 part2_morning_p <- subset(part2_6, Hour < 8)
@@ -255,10 +301,14 @@ part2_late_p$Policy2 <- 0
 
 part2_6_2 <- rbind(part2_morning_p, part2_effect_p, part2_late_p)
 
+#Unite two constraints (hour and date), so that the policy variables is positive in both
+
 part2_6_2$Policy3 <- part2_6_2$Policy + part2_6_2$Policy2
 
 part2_6_3 <- dummy_cols(part2_6_2, select_columns = "Policy3")
 part2_6_3$True_Policy <- part2_6_3$Policy3_2
+
+#Run regression with this new data
 
 reg2_6 <- lm(PM25 ~ date + station_id + Hour + Policy*Delhi, data = part2_6_3)
 summary(reg2_6)
