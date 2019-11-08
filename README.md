@@ -23,10 +23,6 @@ The Data Assignment solution has five elements:
 Comments on code
 -------------------------
 
-The R file doesn't save any graphs, it just prints them. I preferred to do an R
-RMarkdown because I think it is easier to read and if you want to check at any
-of the code then you can take a look at either of the code files
-
-At the beginning of both code files I created a variable with the address so
-it is easier to just change at the beginning if one wants to read the code
-"China_data <- "~/Desktop/Data Assignment/Question1.RData""
+The R file doesn't save any graphs, it just prints them.
+The R file has some comments briefly explaining what I did in each question
+Both R and Rmd files use the inputs I uploaded to GitHub so there should be no need to update them
