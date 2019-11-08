@@ -13,11 +13,11 @@ Project deliveries
 ----------------------
 
 The Data Assignment solution has five elements:
-1. A PDF generated from an RMarkdown file
-2. The RMardown file that generated the PDF
-3. An R file with the same code as the RMarkdown
-4. The inputs files I used
-5. This ReadMe file
+1. A PDF generated from an RMarkdown file "Data Assignment 12215739.Rmd"
+2. The RMardown file that generated the PDF "Data Assignment 12215739.pdf"
+3. An R file with the same code as the RMarkdown "R file - Data Assignment.R"
+4. The inputs files I used "Question1.Rdata", "Part1.Rdata", "Part2.Rdata"
+5. This ReadMe file "README.md
 
 -------------------------
 Comments on code
