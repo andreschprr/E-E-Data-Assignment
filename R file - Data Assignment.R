@@ -31,12 +31,13 @@ source_data(part2data)
 
 APIdata$Date <- as.Date(APIdata$Date, "%m/%d/%Y")
 
-c <- ggplot(APIdata, aes(API)) 
-
-c + geom_histogram(mapping = NULL, data = NULL, stat = "bin",
+c <- ggplot(APIdata, aes(API)) + geom_histogram(mapping = NULL, data = NULL, stat = "bin",
                  position = "stack", colour = "white", binwidth = NULL, bins = 40,
                  na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) +
   geom_vline(xintercept = 100,col="red")
+print(c)
+ggsave("c.png")
+
 
 ############
 #Part 2.1

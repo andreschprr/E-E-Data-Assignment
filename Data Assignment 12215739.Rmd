@@ -10,6 +10,7 @@ library(ggplot2)
 library(dplyr)
 library(car)
 library(fastDummies)
+library(repmis)
 
 ```
 
@@ -18,11 +19,16 @@ The dataset China.Rdata provides the AQI for several years for the city of Beiji
 
 
 ```{r read, message=FALSE, warning=FALSE, echo=FALSE}
-main_folder <- "~/Desktop/Data Assignment"
+main_folder <- "~/Desktop"
 setwd(main_folder)
-China_data <- "~/Desktop/Data Assignment/Question1.RData"
-part1data <- "~/Desktop/Data Assignment/part1.RData"
-part2data <- "~/Desktop/Data Assignment/part2.RData"
+
+China_data <-"https://github.com/andreschprr/E-E-Data-Assignment/blob/master/Question1.Rdata?raw=true"
+part1data <- "https://github.com/andreschprr/E-E-Data-Assignment/blob/master/part1.Rdata?raw=true"
+part2data <- "https://github.com/andreschprr/E-E-Data-Assignment/blob/master/part2.Rdata?raw=true"
+
+source_data(China_data)
+source_data(part1data)
+source_data(part2data)
 
 ```
 
@@ -32,7 +38,6 @@ We want to make sure that units don't sort around the cutoff. This is sometimes 
 
 
 ```{r histogram, message=FALSE, warning=FALSE, echo=FALSE}
-load(China_data) 
 
 APIdata$Date <- as.Date(APIdata$Date, "%m/%d/%Y")
 
@@ -58,7 +63,6 @@ Policy of rationing driving in Dehli. Cars were classified into odd and even cat
 
 ###2.1.1
 ```{r part1_1, message=FALSE, warning=FALSE, echo=FALSE}
-load(part1data)
 part1_1data <- cbind(part1$PM10, part1$PM25, part1$NO2)
 colnames(part1_1data) <- c("PM10", "PM25", "NO2")
 summary(part1_1data)
@@ -162,11 +166,6 @@ The pollution only considering the first station is 248.5 PM25 average a day for
 
 
 ##Part 2
-
-```{r part2, message=FALSE, warning=FALSE, echo=FALSE}
-load(part2data)
-
-```
 
 ###2.2.1
 
