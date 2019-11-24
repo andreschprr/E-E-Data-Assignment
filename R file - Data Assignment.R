@@ -10,7 +10,9 @@ library(dplyr)
 library(car)
 library(fastDummies)
 library(repmis)
-
+library(lubridate)
+library(ggpubr)
+library(lfe)
 
 #Loading data and setting wd
 
@@ -165,22 +167,25 @@ print(plot1_5 + labs( title= "Average PM25 in Delhi (Nov 2015 - Apr 2016)", y="A
 
 #2.2.1
 
-#Group data by date and by Delhi vs no Delhi, get mean PM25, plot
 
-part2_1data <- part2 %>% group_by(date, Delhi)
+t_start = part2$time[which(part2$date==dmy("14-12-2015"))][1]
+t_end = part2$time[which(part2$date==dmy("16-01-2016"))][1]
+t_policy = part2$time[which(part2$date==dmy("01-01-2016"))][1]
 
+data = part2 %>% filter(time>t_start & time<t_end)
+data = data %>% group_by(Delhi,time) %>% 
+  summarise(pm25=mean(PM25,na.rm=TRUE))
 
-data_plot2_1 <- part2_1data %>% summarise(
-  PM25 = mean(PM25)
-)
+data$Delhi=as.factor(data$Delhi)
 
-#Use only data from December 1st to Jan 15th
+p = ggline(data, "time", "pm25",
+           shape = "Delhi",
+           color = "Delhi", palette = c("magenta4", "lightsteelblue"),
+           numeric.x.axis = TRUE)
 
-data_plot2_11 <- subset(data_plot2_1, date > "2015-11-30" & date < "2016-01-16")
+p = p + geom_vline(xintercept = t_policy)
+p
 
-ggplot(data=data_plot2_11, aes(x=date, y=PM25, group=Delhi, colour = Delhi))+ 
-  geom_line()+
-  geom_vline(xintercept = as.POSIXct("2016-01-01"), col = "gold2", linetype = "dashed")
 
 #Initially the levels of PM25 went down in the first couple of days both in Delhi and elsewhere. However the next few days we can see the highest numbers for the period. Then we have an extreme downward trend and a rebound. It is difficult to get a definitive conclusion about the impact of the policy since there is so much variation between days.
 
@@ -188,23 +193,12 @@ ggplot(data=data_plot2_11, aes(x=date, y=PM25, group=Delhi, colour = Delhi))+
 
 #2.2.2
 
-#Use data from previous question. Get mean PM25 
+diff = data$pm25[which(data$Delhi=="1")] - data$pm25[which(data$Delhi=="0")]
+difference = cbind(data$time[which(data$Delhi=="1")], diff)
+difference = as.data.frame(difference)
+names(difference)=c("time","pm25")
+ggscatter(data=difference,y="pm25",x="time",color = "lightblue3", shape = 8, size = 2)
 
-data_2_2 <- data_plot2_1 %>% summarise(
-  PM25 = mean(PM25)
-)
-
-#Create two dataframes. One with data from Delhi, the other with data from outside Delhi
-#merge them by date so the PM25 measures won't merge. This will create the variables PM25.x and PM25.y
-#Create new variable from the substraction of PM25.x - PM25.y and plot it
-
-data_2_2_Delhi <- subset(data_plot2_1, Delhi == 1)
-data_2_2_NoDelhi <- subset(data_plot2_1, Delhi == 0)
-data_2_2_merged <- merge(x = data_2_2_Delhi, y = data_2_2_NoDelhi, by = "date")
-data_2_2_merged$DiffPM25 <- data_2_2_merged$PM25.x - data_2_2_merged$PM25.y 
-
-plot2_2 <- ggplot(aes(x = date, y = DiffPM25), data = data_2_2_merged) + geom_point()
-print(plot2_2 + labs( title= "Difference in daily PM25 between Delhi and outside Delhi", y="Avg PM25 in Delhi - Avg PM25 outside Delhi", x = "Date"))
 
 #####################################################################################
 
@@ -230,7 +224,8 @@ part2Delhi_ap$Policy <- 0
 
 part2_3 <- rbind(part2Delhi_bp, part2Delhi_p, part2Delhi_ap)
 
-reg2_3 <- lm(PM25 ~ station_id + Policy, data = part2_3)
+reg2_3 <- felm(PM25~1+Policy|station_id|0|0,data= part2_3)
+
 summary(reg2_3)
 
 #We find a positive relationship between Policy in place and PM25 levels. This is to say that on the time that the policy was in place we saw an increase in PM25. The estimates are significant under 99% confidence interval.
@@ -243,7 +238,7 @@ summary(reg2_3)
 
 #Using the data from the previous question, run another regression
 
-reg2_4 <- lm(PM25 ~ station_id + Policy*time, data = part2_3)
+reg2_4 <- felm(PM25~1+Policy*time|station_id|0|0, data = part2_3)
 summary(reg2_4)
 
 #We still have all estimates significant at the 99%. In this case the Policy coefficient is still positive. Nevertheless, both time and Policy*time are negative. The coefficient of Policy is the effect of Policy only when time is zero. It is kind of difficult to picture. The coefficient of time is the effect of time on PM25 when Policy is zero. This would measure how much is the pollution increasing or decreasing through time. Finally the coefficient of time*Policy is the effect of time and Policy together. So the effect of time when the policy is active. We could argue that as time passes when the policy is active, more people adapt and reduce car usage, thus reducing PM25. This is a possible explanation but not by any means the only thing we could interpret from this data. 
@@ -266,10 +261,10 @@ part2_5 <- rbind(part2_bp, part2_p, part2_ap)
 
 #Use data to run a regression
 
-reg2_5 <- lm(PM25 ~ time + Policy*Delhi, data = part2_5)
+reg2_5 <- felm(PM25~1+Delhi*Policy|time|0|0,data=part2_5)
 summary(reg2_5)
 
-#In this case the coefficients from $Policy*Delhi$ and $Delhi$ are not statistically significant at a 95% Confidence Interval. This is to say that we can't really draw conclusions from this regression. Because the policy is in Delhi, the value we would be interested is $Policy*Delhi$ because that is the effect of the policy on Delhi. The policy shouldn't have an big effect outside of Delhi, and we are not looking at differences between Delhi and the outside so our attention should be on $Policy*Delhi$.
+#We still have all estimates significant at the 99%. In this case the $Policy$ coefficient is still positive. Nevertheless, both time and $Policy*time$ are negative. The coefficient of $Policy$ is the effect of the policy only when time is zero, so what is the effect of the Policy when the policy is not active. This may sound weird but in some cases, people can adapt depending their expectations. If you know that tomorrow you are not going to have hot water you may decide to shower today in the evening instead. So even if the event is not in place it influenced another time. However, this wasn't the case here. Finally the coefficient of $Policy*time$ is the effect of time and Policy together. So the effect of time when the policy is active. We could argue that as time passes when the policy is active, more people adapt and reduce car usage, thus reducing PM25. This is a possible explanation but not by any means the only thing we could interpret from this data. 
 
 #####################################################################################
 
@@ -310,10 +305,10 @@ part2_6_3$True_Policy <- part2_6_3$Policy3_2
 
 #Run regression with this new data
 
-reg2_6 <- lm(PM25 ~ date + station_id + Hour + Policy*Delhi, data = part2_6_3)
+reg2_6 <- felm(PM25~1+Policy+Policy:Delhi|time+station_id+Hour|0|0, data = part2_6_3)
 summary(reg2_6)
 
-#Every coefficient is statistically significant except the $Polcy*Delhi$ interaction term. The result in this case makes a case for a really small decrease in pollution due to the policy for stations in Delhi. However, the result is too small and not statistically significant so we can't draw many conclussions.
+#Every coefficient is statistically significant. The $Polcy*Delhi$ interaction term is negative which means that there is a decrease in PM25 particles in Dehli during the Policy. This is evidence that there is a strong relationship between the policy being in place in a particular location and a decrease in PM25 pollution
 
 
 
